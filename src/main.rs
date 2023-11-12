@@ -1,5 +1,5 @@
 mod handlers;
-use axum::routing::{get, post, Router};
+use axum::routing::{delete, get, post, put, Router};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 
@@ -7,6 +7,7 @@ use std::env;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
     let addr = format!("0.0.0.0:{}", port);
+
     let database_url = env::var("DATABASE_URL").expect("missing DATABASE_URL env");
 
     let pool = PgPoolOptions::new()
@@ -17,6 +18,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/", get(handlers::health))
         .route("/quotes", post(handlers::create_quote))
+        .route("/quotes", get(handlers::read_quotes))
+        .route("/quotes/:id", put(handlers::update_quote))
+        .route("/quotes/:id", delete(handlers::delete_quote))
         .with_state(pool);
 
     axum::Server::bind(&addr.parse().unwrap())
